@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Shinkawa — ASPIRE Trip Itinerary</title>
+<style>
+  :root {
+    --paper: #edf1f1;
+    --card: #ffffff;
+    --ink: #12233a;
+    --muted: #57667a;
+    --line: #c9d2d6;
+    --accent: #c1442a;
+    --accent-ink: #ffffff;
+    --ok-fg: #1f5c39;
+    --ok-bg: #e1efe4;
+    --pending-fg: #8a5b12;
+    --pending-bg: #f7ebd2;
+    --shadow: 0 1px 2px rgba(18,35,58,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #10161c; --card: #161d24; --ink: #e7edf0; --muted: #93a3af; --line: #2a343d;
+      --accent: #e2694c; --accent-ink: #10161c; --ok-fg: #8fdaab; --ok-bg: #163524;
+      --pending-fg: #f0c579; --pending-bg: #3a2c10; --shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10161c; --card: #161d24; --ink: #e7edf0; --muted: #93a3af; --line: #2a343d;
+    --accent: #e2694c; --accent-ink: #10161c; --ok-fg: #8fdaab; --ok-bg: #163524;
+    --pending-fg: #f0c579; --pending-bg: #3a2c10; --shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"] {
+    --paper: #edf1f1; --card: #ffffff; --ink: #12233a; --muted: #57667a; --line: #c9d2d6;
+    --accent: #c1442a; --accent-ink: #ffffff; --ok-fg: #1f5c39; --ok-bg: #e1efe4;
+    --pending-fg: #8a5b12; --pending-bg: #f7ebd2; --shadow: 0 1px 2px rgba(18,35,58,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet { max-width: 840px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+  .eyebrow, .label, .tag, .dow, .mon, .board-dates, .board-loc, th, select, .personal-summary h2, .chip, .ribbon-text {
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  .mono, .dnum, .board-range, .talk-time {
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, summary:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Masthead */
+  .masthead { margin-bottom: 2rem; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 0.5rem;
+  }
+  .dates { color: var(--muted); font-size: 1.02rem; margin: 0 0 1.4rem; }
+  .dates .mono { color: var(--ink); }
+
+  .route-strip {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+    padding: 0.9rem 1rem; background: var(--card); border: 1px solid var(--line);
+    border-radius: 4px; box-shadow: var(--shadow);
+  }
+  .route-strip .stop { font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-weight: 700; font-size: 0.86rem; letter-spacing: 0.02em; }
+  .route-strip .arrow { color: var(--muted); font-size: 0.8rem; }
+  .note { font-size: 0.88rem; color: var(--muted); margin-top: 0.9rem; }
+
+  /* Traveler picker */
+  .picker {
+    margin-top: 1.4rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem;
+    padding: 0.9rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .picker label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  select#traveler-select {
+    flex: 1 1 220px;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  #clear-traveler {
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.8rem; font-weight: 700;
+    background: none; border: 1px solid var(--line); border-radius: 4px;
+    padding: 0.5rem 0.7rem; color: var(--muted); cursor: pointer;
+  }
+  #clear-traveler:hover { color: var(--accent); border-color: var(--accent); }
+
+  .personal-summary {
+    margin-top: 0.8rem;
+    padding: 0.9rem 1rem;
+    background: var(--ok-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .personal-summary[hidden] { display: none; }
+  .personal-summary h2 {
+    margin: 0 0 0.5rem; font-size: 0.95rem; font-weight: 800; color: var(--ink);
+  }
+  .personal-summary .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .personal-summary .chip {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.2rem 0.55rem; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  }
+  .personal-summary p { margin: 0.3rem 0 0; font-size: 0.88rem; color: var(--ink); }
+  .personal-summary p.hint { color: var(--muted); font-size: 0.8rem; }
+
+  /* Attendance matrix */
+  .matrix-card {
+    margin-top: 1.6rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .matrix-head { padding: 0.9rem 1rem 0.7rem; border-bottom: 1px solid var(--line); }
+  .matrix-head h2 { font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 1.02rem; margin: 0 0 0.3rem; }
+  .matrix-head p { margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--muted); }
+  .matrix-legend { display: flex; flex-wrap: wrap; gap: 1.1rem; font-size: 0.76rem; color: var(--muted); font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; }
+  .matrix-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; flex: none; }
+  .dot.on { background: var(--accent); }
+  .dot.off { border: 1.5px solid var(--line); }
+  .matrix-scroll { overflow: auto; max-height: 30rem; }
+  table.matrix { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+  table.matrix th, table.matrix td { padding: 0.4rem 0.7rem; text-align: left; white-space: nowrap; border-top: 1px solid var(--line); }
+  table.matrix thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--card);
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);
+    border-top: none; border-bottom: 1px solid var(--line);
+  }
+  table.matrix td.mx-name, table.matrix th.mx-name { position: sticky; left: 0; z-index: 1; background: var(--card); }
+  table.matrix thead th.mx-name { z-index: 3; }
+  table.matrix td.mx-dot { text-align: center; }
+  table.matrix tr.mx-group td {
+    background: var(--paper);
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent);
+    font-weight: 700; position: static;
+  }
+  table.matrix tbody tr.mx-person { cursor: pointer; }
+  table.matrix tbody tr.mx-person:hover td { background: var(--paper); }
+  table.matrix tbody tr.mx-person.mx-active td { background: var(--ok-bg); }
+
+  /* Leg sections */
+  .leg { margin-top: 2.6rem; }
+  .board {
+    display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 1rem;
+    background: var(--ink); color: var(--paper); padding: 0.75rem 1rem; border-radius: 4px 4px 0 0;
+  }
+  .board-loc { font-weight: 800; letter-spacing: 0.03em; font-size: 0.95rem; text-transform: uppercase; }
+  .board-range { font-size: 0.85rem; opacity: 0.85; }
+  .leg-meta {
+    border: 1px solid var(--line); border-top: none; background: var(--card);
+    padding: 0.7rem 1rem; font-size: 0.84rem; color: var(--muted);
+  }
+  .leg-meta strong { color: var(--ink); }
+  .leg-meta.plain { border-radius: 0 0 4px 4px; }
+
+  .days { border: 1px solid var(--line); border-top: none; border-radius: 0 0 4px 4px; overflow: hidden; }
+
+  .day {
+    position: relative;
+    display: grid; grid-template-columns: 74px 1fr; gap: 0.9rem;
+    padding: 0.95rem 1rem; background: var(--card); border-top: 1px solid var(--line);
+    transition: opacity 0.15s ease;
+  }
+  .day:first-child { border-top: none; }
+  .day.dimmed { opacity: 0.4; }
+  .day.dimmed::after {
+    content: "Not on your itinerary";
+    position: absolute; top: 0.7rem; right: 0.9rem;
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .day-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.15; }
+  .day-badge .dow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; }
+  .day-badge .dnum { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace; }
+  .day-badge .mon { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.06em; font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; }
+  .day-body h3 { font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 1.02rem; margin: 0 0 0.3rem; font-weight: 700; }
+  .day-body p { margin: 0 0 0.5rem; font-size: 0.95rem; }
+  .day-body p:last-of-type { margin-bottom: 0; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+  .tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; padding: 0.18rem 0.5rem; border-radius: 999px; }
+  .tag.pending { color: var(--pending-fg); background: var(--pending-bg); }
+  .tag.ok { color: var(--ok-fg); background: var(--ok-bg); }
+  .tag.talk { color: var(--accent-ink); background: var(--accent); }
+
+  .program { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.75rem; }
+  .program th, .program td { text-align: left; padding: 0.45rem 0.6rem; border-top: 1px solid var(--line); }
+  .program th { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-top: none; padding-bottom: 0.3rem; }
+  .program-wrap { overflow-x: auto; }
+
+  details.roster { margin-top: 2.6rem; border: 1px solid var(--line); border-radius: 4px; background: var(--card); }
+  details.roster summary {
+    cursor: pointer; padding: 0.9rem 1rem; font-weight: 700; font-size: 0.92rem; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  details.roster summary::-webkit-details-marker { display: none; }
+  details.roster summary::after { content: "+"; color: var(--accent); font-size: 1.2rem; font-weight: 700; }
+  details.roster[open] summary::after { content: "\2212"; }
+  .roster-body { padding: 0 1rem 1.1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem 1.5rem; font-size: 0.85rem; }
+  .roster-group h4 { margin: 0 0 0.35rem; font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+  .roster-group ul { margin: 0; padding-left: 1.1rem; color: var(--muted); }
+  .roster-group li.gone { text-decoration: line-through; opacity: 0.6; }
+
+  .checklist { margin-top: 2.6rem; border: 1px solid var(--line); border-radius: 4px; background: var(--card); box-shadow: var(--shadow); overflow: hidden; }
+  .checklist-head { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); }
+  .checklist-head h2 { font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 1.05rem; margin: 0 0 0.2rem; }
+  .checklist-head p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+  .checklist-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  @media (max-width: 560px) { .checklist-cols { grid-template-columns: 1fr; } }
+  .checklist-col { padding: 1rem 1.1rem; }
+  .checklist-col:first-child { border-right: 1px solid var(--line); }
+  @media (max-width: 560px) { .checklist-col:first-child { border-right: none; border-bottom: 1px solid var(--line); } }
+  .checklist-col h3 { font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.7rem; }
+  .checklist-col.open h3 { color: var(--pending-fg); }
+  .checklist-col.done h3 { color: var(--ok-fg); }
+  .checklist ul { list-style: none; margin: 0; padding: 0; }
+  .checklist li { display: flex; gap: 0.55rem; align-items: baseline; font-size: 0.88rem; padding: 0.32rem 0; }
+  .checklist li .box { flex: none; width: 0.85rem; height: 0.85rem; border: 1.5px solid var(--muted); border-radius: 2px; margin-top: 0.2rem; }
+  .checklist-col.done li .box { background: var(--ok-fg); border-color: var(--ok-fg); }
+  .checklist-col.done li { color: var(--muted); text-decoration: line-through; }
+
+  footer { margin-top: 2.8rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+
+<div class="sheet">
+
+  <header class="masthead">
+    <p class="eyebrow">Travel Itinerary</p>
+    <h1>Paris &rarr; T&uuml;bingen &rarr; Munich</h1>
+    <p class="dates">ASPIRE Symposium trip &middot; <span class="mono">23 Sep &ndash; 8 Oct 2026</span></p>
+    <div class="route-strip">
+      <span class="stop">JAPAN</span><span class="arrow">&rarr;</span>
+      <span class="stop">PALAISEAU</span> <span class="mono" style="font-size:0.7rem; color:var(--muted);">(day trips to Paris)</span><span class="arrow">&rarr;</span>
+      <span class="stop">T&Uuml;BINGEN</span><span class="arrow">&rarr;</span>
+      <span class="stop">STUTTGART</span><span class="arrow">&rarr;</span>
+      <span class="stop">T&Uuml;BINGEN</span><span class="arrow">&rarr;</span>
+      <span class="stop">MUNICH</span><span class="arrow">&rarr;</span>
+      <span class="stop">GARCHING</span><span class="arrow">&rarr;</span>
+      <span class="stop">MUNICH</span><span class="arrow">&rarr;</span>
+      <span class="stop">BORDEAUX</span><span class="arrow">&rarr;</span>
+      <span class="stop">JAPAN</span>
+    </div>
+
+    <div class="picker">
+      <label for="traveler-select">View itinerary for</label>
+      <select id="traveler-select">
+        <option value="">— Full group itinerary (all 45) —</option>
+        <optgroup label="IMS">
+          <option value="ohmori">Kenji Ohmori</option>
+          <option value="tomita">Takafumi Tomita</option>
+          <option value="matsubara">Takuya Matsubara</option>
+          <option value="srakaew">Kritsana Srakaew (Cake)</option>
+          <option value="magro">Valentin Magro</option>
+          <option value="omar">Omar El Farouk Kecir</option>
+          <option value="watanabe">Genki Watanabe</option>
+          <option value="mauricio">Jorge Mauricio</option>
+          <option value="odagawa">Harumu Odagawa</option>
+          <option value="shinkawa">Seiya Shinkawa</option>
+          <option value="sommer">Christian Sommer</option>
+          <option value="robin">Robin Kocik</option>
+        </optgroup>
+        <optgroup label="RIKEN">
+          <option value="makino">Akane Makino</option>
+          <option value="sylvain">Sylvain de L&eacute;s&eacute;leuc</option>
+          <option value="lucas">Lucas Ruffloch</option>
+          <option value="valentinam">Valentin Anthoine-Milhomme (Shogun)</option>
+        </optgroup>
+        <optgroup label="Kindai Danshita group">
+          <option value="danshita">Ippei Danshita</option>
+          <option value="furuchi">Rito Furuchi</option>
+          <option value="yabuuchi">Yoshihiro Yabuuchi</option>
+          <option value="kawasaki">Daiki Kawasaki</option>
+        </optgroup>
+        <optgroup label="Waseda/RIKEN Fukuhara group">
+          <option value="fukuhara">Takeshi Fukuhara</option>
+          <option value="keegan">Keegan McGehee</option>
+          <option value="hatano">Jumpei Hatano</option>
+          <option value="miki">Shinnosuke Miki</option>
+          <option value="kodai">Kodai Morita</option>
+          <option value="abe">Makoto Abe</option>
+          <option value="imaizumi">Takashi Imaizumi</option>
+          <option value="imanishi">Koki Imanishi</option>
+          <option value="tamagawa">Yuhi Tamagawa</option>
+        </optgroup>
+        <optgroup label="Tokyo University of Science (Kunimi group)">
+          <option value="kunimi">Masaya Kunimi</option>
+          <option value="kuji">Hiroki Kuji</option>
+          <option value="yoshida">Takaharu Yoshida</option>
+          <option value="asari">Yuki Asari</option>
+          <option value="kuriki">Hikaru Kuriki</option>
+          <option value="hashimoto">Daiki Hashimoto</option>
+          <option value="oki">Takato Oki</option>
+          <option value="kodama">Ryusuke Kodama</option>
+          <option value="shimizu">Miyu Shimizu</option>
+          <option value="tanabe">Kaima Tanabe</option>
+        </optgroup>
+        <optgroup label="Takahashi group (Kyoto Univ.)">
+          <option value="kusano">Toshi Kusano</option>
+          <option value="kashimoto">Takumi Kashimoto</option>
+          <option value="yokoyama">Rei Yokoyama</option>
+          <option value="asano">Reiji Asano</option>
+          <option value="kawamura">Yuki Kawamura</option>
+          <option value="moda">Shogo Moda</option>
+        </optgroup>
+      </select>
+      <button id="clear-traveler" type="button">Show everyone</button>
+    </div>
+
+    <div class="personal-summary" id="personal-summary" hidden>
+      <h2 id="ps-name"></h2>
+      <div class="chips" id="ps-chips"></div>
+      <p id="ps-note"></p>
+      <p class="hint">Days greyed out below are not listed for this person in the source planning page.</p>
+    </div>
+
+    <p class="note">Built from the ASPIRE symposium group planning page. Many bookings are still open &mdash; see the checklist at the end before relying on this for actual travel.</p>
+  </header>
+
+  <div class="matrix-card">
+    <div class="matrix-head">
+      <h2>Who's going where</h2>
+      <p>The 27 people on the shared travel plan, and which legs each of them is on. Click a row to load that person above. The other 18 registration-only attendees join the symposium alone and aren't shown here.</p>
+      <div class="matrix-legend">
+        <span><span class="dot on"></span> On this leg</span>
+        <span><span class="dot off"></span> Not listed</span>
+      </div>
+    </div>
+    <div class="matrix-scroll">
+      <table class="matrix" id="matrix-table">
+        <thead>
+          <tr>
+            <th class="mx-name">Name</th>
+            <th>Pre-ASPIRE</th>
+            <th>Symposium</th>
+            <th>MPQ/LMU</th>
+            <th>Planqc</th>
+            <th>Bordeaux</th>
+          </tr>
+        </thead>
+        <tbody id="matrix-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LEG 1 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">Pre&#8209;ASPIRE Lab Visits &middot; Paris area</span>
+      <span class="board-range">23&ndash;27 Sep</span>
+    </div>
+    <div class="leg-meta">Planned by <strong>Takafumi Tomita</strong> &middot; full delegation of 23 travels this leg (IMS, RIKEN, Danshita, Fukuhara, Kunimi &amp; Takahashi groups) &mdash; Sylvain de L&eacute;s&eacute;leuc joins the group later, at the symposium</div>
+    <div class="days">
+      <div class="day" data-legs="L1">
+        <div class="day-badge"><span class="dow">Wed</span><span class="dnum">23</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Depart Japan &rarr; arrive Paris &rarr; transfer to Palaiseau</h3>
+          <p>Evening flight from Japan. Land in Paris, then transfer straight to Palaiseau &mdash; the group bases itself there for the whole 23&ndash;27 Sep stretch and commutes into Paris as needed, rather than staying in central Paris.</p>
+          <div class="tags"><span class="tag pending">Flight not booked</span><span class="tag pending">Hotel not booked &mdash; Omar booking, target 6 Aug 2026</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L1">
+        <div class="day-badge"><span class="dow">Thu</span><span class="dnum">24</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Visit Institut d'Optique (Antoine lab), Palaiseau</h3>
+          <p>Talks by Danshita-sensei and Matsubara. Everyone stays at the same Palaiseau-area hotel through 27 Sep, except Valentin Magro, who books separately. Hotel is being arranged near Massy&ndash;Palaiseau station.</p>
+          <div class="tags"><span class="tag ok">Invitation letter obtained</span><span class="tag pending">Hotel not booked &mdash; Omar booking, target 6 Aug 2026</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L1" data-skip="magro,lucas,keegan,abe,imaizumi,tamagawa">
+        <div class="day-badge"><span class="dow">Fri AM</span><span class="dnum">25</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Visit Pasqal (Palaiseau)</h3>
+          <p>Original contact, Sylvain Dutartre, is on holiday until early September &mdash; a new contact is being found. <strong>Skip this visit:</strong> Valentin Magro, Lucas Ruffloch, Keegan McGehee, Makoto Abe, Takashi Imaizumi, Yuhi Tamagawa. Danshita and Kawasaki attend specifically for a Pasqal theory discussion.</p>
+          <div class="tags"><span class="tag pending">Invitation letter pending</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L1">
+        <div class="day-badge"><span class="dow">Fri PM</span><span class="dnum">25</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Day trip to Coll&egrave;ge de France (Paris)</h3>
+          <p>Commute into Paris for the lab tour with the Alexei / Brune / Raimond group, arranged by Magro. Back to Palaiseau for the night.</p>
+          <div class="tags"><span class="tag ok">Invitation letter obtained</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L1">
+        <div class="day-badge"><span class="dow">Sat</span><span class="dnum">26</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Free day &mdash; Palaiseau</h3>
+          <p>Optional day trip into Paris; overnight back in Palaiseau.</p>
+        </div>
+      </div>
+      <div class="day" data-legs="L1">
+        <div class="day-badge"><span class="dow">Sun</span><span class="dnum">27</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Train Palaiseau &rarr; T&uuml;bingen</h3>
+          <p>Self-booked &mdash; not supported by the travel team or the group credit card; one person may front the cost and collect reimbursement. Christian Sommer's ticket still needs to be sent to him. Local tour of T&uuml;bingen led by Moritz in the afternoon.</p>
+          <div class="tags"><span class="tag pending">Train tickets not booked</span><span class="tag pending">Send ticket to Christian Sommer</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEG 2 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">ASPIRE Symposium &middot; T&uuml;bingen</span>
+      <span class="board-range">27 Sep &ndash; 2 Oct</span>
+    </div>
+    <div class="leg-meta">Everyone attends the symposium itself except Robin Kocik &mdash; Notion's leg-by-leg People lists only spell out IMS, RIKEN (Sylvain de L&eacute;s&eacute;leuc joins here), Danshita &amp; Fukuhara by name, but the Kunimi and Takahashi groups are confirmed via the ASPIRE registration sheet</div>
+    <div class="days">
+      <div class="day" data-legs="L2">
+        <div class="day-badge"><span class="dow">Mon&ndash;Wed</span><span class="dnum">28&ndash;30</span><span class="mon">Sep</span></div>
+        <div class="day-body">
+          <h3>Symposium sessions</h3>
+          <p>Talks and poster sessions (program below). T&uuml;bingen hotel is symposium-designated and prepaid via the corporate card (27 Sep check-in &ndash; 2 Oct check-out).</p>
+        </div>
+      </div>
+      <div class="day" data-legs="L2">
+        <div class="day-badge"><span class="dow">Thu AM</span><span class="dnum">1</span><span class="mon">Oct</span></div>
+        <div class="day-body"><h3>Symposium sessions</h3></div>
+      </div>
+      <div class="day" data-legs="L2">
+        <div class="day-badge"><span class="dow">Thu PM</span><span class="dnum">1</span><span class="mon">Oct</span></div>
+        <div class="day-body"><h3>T&uuml;bingen lab tours</h3></div>
+      </div>
+      <div class="day" data-legs="L2">
+        <div class="day-badge"><span class="dow">Fri</span><span class="dnum">2</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Day trip to Stuttgart &middot; visit Stuttgart University</h3>
+          <p>Anyone flying home today heads to the airport (Stuttgart or Frankfurt) straight after the tour. Everyone else returns to T&uuml;bingen and stays Friday night, moving to Munich the next day.</p>
+          <div class="tags"><span class="tag pending">Friday-night hotel TBD &mdash; Tomita asking Akane-san</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="leg-meta plain" style="border-top:none; margin-top:-1px;">
+      <div class="program-wrap">
+        <table class="program">
+          <thead><tr><th>Speaker</th><th>Topic</th><th>Length</th></tr></thead>
+          <tbody>
+            <tr><td>Cake <span class="mono" style="font-size:0.75em">(Kritsana Srakaew)</span></td><td>QC update</td><td class="mono">35+10 min</td></tr>
+            <tr><td>Valentin Magro</td><td>Spin echo</td><td class="mono">35+10 min</td></tr>
+            <tr><td>Shogun <span class="mono" style="font-size:0.75em">(Valentin Anthoine-Milhomme)</span> &mdash; student talk</td><td>Electronics for cold-atom lab</td><td class="mono">30 min</td></tr>
+            <tr><td>Others</td><td>Poster session (not mandatory for everyone; ~5 posters expected)</td><td class="mono">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:0.6rem;">"Cake" and "Shogun" are nicknames used on the planning page, for Kritsana Srakaew and Valentin Anthoine-Milhomme.</p>
+    </div>
+  </section>
+
+  <!-- LEG 3 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">Transit to Munich</span>
+      <span class="board-range">3&ndash;4 Oct</span>
+    </div>
+    <div class="leg-meta">Everyone continuing on to MPQ/LMU, Planqc, or Bordeaux &mdash; the Danshita, Kunimi and Takahashi groups, and part of the Fukuhara group, are not listed beyond the symposium</div>
+    <div class="days">
+      <div class="day" data-legs="L3">
+        <div class="day-badge"><span class="dow">Sat</span><span class="dnum">3</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Move to Munich</h3>
+          <p>Stay in Munich city; the group commutes to Garching from there (no separate Garching stay). Everyone is booked into the same hotel. Booking is being handled by Christian and Cake &mdash; likely 5 nights for Tomita/Christian and 6 for others staying through Planqc.</p>
+          <div class="tags"><span class="tag pending">Hotel not booked</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L3">
+        <div class="day-badge"><span class="dow">Sun</span><span class="dnum">4</span><span class="mon">Oct</span></div>
+        <div class="day-body"><h3>Free time in Munich</h3></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEG 4 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">MPQ &amp; LMU Visit</span>
+      <span class="board-range">5&ndash;6 Oct</span>
+    </div>
+    <div class="leg-meta">Planned by <strong>Cake</strong> &middot; Magro, Odagawa, Sylvain, Valentin Anthoine-Milhomme and Robin Kocik leave by 6 Oct to join Bordeaux instead of Planqc; Tomita and Christian Sommer attend this leg but fly back to Japan on 7 Oct instead of visiting Planqc; the Fukuhara group's MPQ-only members (Abe, Imaizumi, Tamagawa, Imanishi) join separately from the IMS/RIKEN group below. Robin Kocik doesn't attend the symposium itself &mdash; he joins only for this leg and Bordeaux.</div>
+    <div class="days">
+      <div class="day" data-legs="L4">
+        <div class="day-badge"><span class="dow">Mon</span><span class="dnum">5</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Visit LMU, Munich <span class="mono" style="font-size:0.7em; color:var(--muted)">10:00&ndash;16:00</span></h3>
+          <p>Lab tour and discussion. Per the retreat planning sheet, the IMS/RIKEN/Robin group splits into three for the visit: <strong>Group 1</strong> Tomita, Christian, Matsubara &middot; <strong>Group 2</strong> Cake (Srakaew), Omar, Genki, Jorge, Seiya, Lucas &middot; <strong>Group 3</strong> Sylvain, Valentin Magro, Shogun (Valentin Anthoine-Milhomme), Harumu, Robin Kocik.</p>
+          <div class="tags"><span class="tag ok">Visit agreed</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L4">
+        <div class="day-badge"><span class="dow">Tue</span><span class="dnum">6</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Visit MPQ, Garching</h3>
+          <p>Omar's seminar for the MPQ team, <span class="mono">9:00&ndash;10:00</span>; lab tour and discussion, <span class="mono">10:00&ndash;16:00</span>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEG 5 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">Planqc &amp; Return</span>
+      <span class="board-range">7&ndash;8 Oct</span>
+    </div>
+    <div class="leg-meta">Academic-affiliation attendees only &middot; headcount limit still being confirmed with Planqc</div>
+    <div class="days">
+      <div class="day" data-legs="L5a">
+        <div class="day-badge"><span class="dow">Wed</span><span class="dnum">7</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Visit Planqc</h3>
+          <p>Academic-affiliation IMS/RIKEN attendees who are still in Munich at this point.</p>
+          <div class="tags"><span class="tag ok">Visit agreed</span><span class="tag pending">Invitation letter &amp; headcount limit pending</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L5b">
+        <div class="day-badge"><span class="dow">Wed</span><span class="dnum">7</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Fly back to Japan (early return)</h3>
+          <p>Tomita and Christian Sommer fly back today instead of visiting Planqc (Yaqumo affiliation conflict).</p>
+        </div>
+      </div>
+      <div class="day" data-legs="L5c">
+        <div class="day-badge"><span class="dow">Thu</span><span class="dnum">8</span><span class="mon">Oct</span></div>
+        <div class="day-body"><h3>Flight back to Japan</h3></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEG 6 -->
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">Bordeaux &middot; Labs &amp; Companies</span>
+      <span class="board-range">7&ndash;10 Oct</span>
+    </div>
+    <div class="leg-meta">Planned by <strong>Sylvain</strong> &middot; separate track from Planqc, for Magro, Odagawa, Robin Kocik (IMS) and Sylvain, Valentin Anthoine-Milhomme (Shogun) (RIKEN), joined by Reiji Asano of the Takahashi group (Kyoto Univ.) &mdash; no one from the Danshita group joins this leg</div>
+    <div class="days">
+      <div class="day" data-legs="L6">
+        <div class="day-badge"><span class="dow">Wed</span><span class="dnum">7</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Move Garching &rarr; Bordeaux</h3>
+        </div>
+      </div>
+      <div class="day" data-legs="L6v">
+        <div class="day-badge"><span class="dow">Thu&ndash;Fri</span><span class="dnum">8&ndash;9</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Lab &amp; company visits</h3>
+          <p>Labs: IOGS/L2PN (Giorgio Santarelli, Simon Bernon), iXAtom. Companies: Aerodiode, Alphanov, Exail.</p>
+          <div class="tags"><span class="tag pending">Hotel not booked</span></div>
+        </div>
+      </div>
+      <div class="day" data-legs="L6ra">
+        <div class="day-badge"><span class="dow">Thu</span><span class="dnum">8</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Fly Bordeaux &rarr; Paris CDG</h3>
+          <p>Odagawa, Robin Kocik and Magro: <span class="mono">20:25 &rarr; 23:00</span>, continuing home from Paris.</p>
+        </div>
+      </div>
+      <div class="day" data-legs="L6rb">
+        <div class="day-badge"><span class="dow">Sat</span><span class="dnum">10</span><span class="mon">Oct</span></div>
+        <div class="day-body">
+          <h3>Fly Bordeaux &rarr; Paris</h3>
+          <p>Sylvain: <span class="mono">19:00 &rarr; 23:00</span>, continuing home from Paris. Valentin Anthoine-Milhomme's return date isn't confirmed &mdash; shown here as a best guess.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <details class="roster">
+    <summary>Full delegation &mdash; 45 named travelers</summary>
+    <div class="roster-body">
+      <div class="roster-group">
+        <h4>IMS (12)</h4>
+        <ul>
+          <li>Kenji Ohmori (Professor, symposium only)</li>
+          <li>Takafumi Tomita</li><li>Takuya Matsubara</li><li>Kritsana Srakaew (Cake)</li>
+          <li>Valentin Magro</li><li>Omar El Farouk Kecir</li><li>Genki Watanabe</li>
+          <li>Jorge Mauricio</li><li>Harumu Odagawa</li><li>Seiya Shinkawa</li><li>Christian Sommer</li>
+          <li>Robin Kocik (MPQ/LMU + Bordeaux only &mdash; skips the symposium itself)</li>
+        </ul>
+      </div>
+      <div class="roster-group">
+        <h4>RIKEN (4)</h4>
+        <ul>
+          <li>Akane Makino (Co-ordinator, symposium only &mdash; likely the "Akane-san" asked about the T&uuml;bingen hotel)</li>
+          <li>Sylvain de L&eacute;s&eacute;leuc (joins at the symposium)</li>
+          <li>Lucas Ruffloch</li><li>Valentin Anthoine-Milhomme (Shogun)</li>
+        </ul>
+      </div>
+      <div class="roster-group">
+        <h4>Kindai Danshita group (4)</h4>
+        <ul>
+          <li>Ippei Danshita</li><li>Daiki Kawasaki</li>
+          <li>Rito Furuchi (Postdoc, symposium only)</li><li>Yoshihiro Yabuuchi (D2, symposium only)</li>
+        </ul>
+      </div>
+      <div class="roster-group">
+        <h4>Waseda/RIKEN Fukuhara group (9)</h4>
+        <ul>
+          <li>Takeshi Fukuhara (PI, symposium only)</li>
+          <li>Keegan McGehee (PostDoc)</li><li>Kodai Morita (M1)</li>
+          <li>Jumpei Hatano (M1, symposium only)</li><li>Shinnosuke Miki (M1, symposium only)</li>
+          <li>Makoto Abe (B4)</li><li>Takashi Imaizumi (B4)</li><li>Yuhi Tamagawa (B4)</li>
+          <li>Koki Imanishi (symposium + MPQ leg, not pre-ASPIRE)</li>
+        </ul>
+      </div>
+      <div class="roster-group">
+        <h4>Tokyo University of Science (10)</h4>
+        <ul>
+          <li>Masaya Kunimi (Assistant Professor)</li><li>Yuki Asari (M2)</li>
+          <li>Hiroki Kuji (D2, symposium only)</li><li>Takaharu Yoshida (D2, symposium only)</li>
+          <li>Hikaru Kuriki (M2, symposium only)</li><li>Daiki Hashimoto (M2, symposium only)</li>
+          <li>Takato Oki (M1, symposium only)</li><li>Ryusuke Kodama (M1, symposium only)</li>
+          <li>Miyu Shimizu (M1, symposium only)</li><li>Kaima Tanabe (M1, symposium only)</li>
+        </ul>
+      </div>
+      <div class="roster-group">
+        <h4>Takahashi group (Kyoto Univ.) (6)</h4>
+        <ul>
+          <li>Takumi Kashimoto</li><li>Rei Yokoyama</li><li>Reiji Asano (Bordeaux leg only)</li>
+          <li>Toshi Kusano (symposium only)</li><li>Yuki Kawamura (M1, symposium only)</li><li>Shogo Moda (M1, symposium only)</li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <section class="leg">
+    <div class="board">
+      <span class="board-loc">Talks &amp; Posters &middot; ASPIRE Registration</span>
+      <span class="board-range">28 Sep&ndash;2 Oct</span>
+    </div>
+    <div class="leg-meta plain" style="border-top:1px solid var(--line);">
+      <div class="program-wrap">
+        <table class="program">
+          <thead><tr><th>Name</th><th>Type</th><th>Title</th></tr></thead>
+          <tbody>
+            <tr><td>Kenji Ohmori</td><td class="mono">talk</td><td>Title TBA</td></tr>
+            <tr><td>Ippei Danshita</td><td class="mono">talk</td><td>Theoretical studies on quantum simulation of quantum spin models</td></tr>
+            <tr><td>Yoshihiro Yabuuchi</td><td class="mono">talk</td><td>Stability of a vortex-antivortex pair state in the hard-core Bose-Hubbard model with long-range hopping</td></tr>
+            <tr><td>Kritsana Srakaew (Cake)</td><td class="mono">talk</td><td>QC update</td></tr>
+            <tr><td>Valentin Magro</td><td class="mono">talk</td><td>Spin echo</td></tr>
+            <tr><td>Valentin Anthoine-Milhomme (Shogun)</td><td class="mono">talk (student)</td><td>Electronics for cold-atom lab</td></tr>
+            <tr><td>Keegan McGehee</td><td class="mono">talk</td><td>Toward Measurement-Based Feedback Control of One-Dimensional Quantum Walks (tentative)</td></tr>
+            <tr><td>Masaya Kunimi</td><td class="mono">talk</td><td>Magnetic-field control of interactions in alkaline-earth Rydberg atoms and applications to XXZ models</td></tr>
+            <tr><td>Hiroki Kuji</td><td class="mono">talk</td><td>STAR architecture with erasure conversion</td></tr>
+            <tr><td>Takaharu Yoshida</td><td class="mono">talk</td><td>Title TBA</td></tr>
+            <tr><td>Takumi Kashimoto</td><td class="mono">talk</td><td>Magnetic-field stabilization for improving Ramsey coherence in ⁸⁷Rb atoms</td></tr>
+            <tr><td>Toshi Kusano</td><td class="mono">talk</td><td>Toward Hardware-Efficient Quantum Error Correction with Ytterbium Tweezer Arrays</td></tr>
+            <tr><td>Takuya Matsubara</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Genki Watanabe</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Seiya Shinkawa</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Harumu Odagawa</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Omar El Farouk Kecir</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Jorge Mauricio</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Daiki Kawasaki</td><td class="mono">poster</td><td>Higgs mode in a Rydberg-atom array described by a dipolar XY model with a staggered field</td></tr>
+            <tr><td>Rito Furuchi</td><td class="mono">poster</td><td>Theoretical analysis on spin-domain formation in the mixed-field Ising model on a square lattice</td></tr>
+            <tr><td>Lucas Ruffloch</td><td class="mono">poster</td><td>Metasurface for tweezers</td></tr>
+            <tr><td>Kodai Morita</td><td class="mono">poster</td><td>Title TBD</td></tr>
+            <tr><td>Jumpei Hatano</td><td class="mono">poster</td><td>Title TBD</td></tr>
+            <tr><td>Yuki Asari</td><td class="mono">poster</td><td>Unified Preparation of Exact and Asymptotic Quantum Many-Body Scars from Dicke States</td></tr>
+            <tr><td>Hikaru Kuriki</td><td class="mono">poster</td><td>Microscopic analysis of Higgs bound states induced by a potential barrier in superfluid Fermi gases</td></tr>
+            <tr><td>Daiki Hashimoto</td><td class="mono">poster</td><td>Asymptotic quantum many-body scar states and gapless excitations in the parent Hamiltonian for additional quantum many-body scar states in the spin-1 XY model</td></tr>
+            <tr><td>Takato Oki</td><td class="mono">poster</td><td>Title TBA</td></tr>
+            <tr><td>Ryusuke Kodama</td><td class="mono">poster</td><td>Analysis of Krylov Complexity in Asymptotic Quantum Many-Body Scar States</td></tr>
+            <tr><td>Miyu Shimizu</td><td class="mono">poster</td><td>Magnon band splitting and time evolution of spin correlation functions in altermagnets</td></tr>
+            <tr><td>Kaima Tanabe</td><td class="mono">poster</td><td>Evaluation of Energy Barriers across the BCS&ndash;BEC Crossover in a Ring-Trapped Superfluid Fermi Gas</td></tr>
+            <tr><td>Akane Makino</td><td class="mono">poster</td><td>The Japanese neutral-atom QC community</td></tr>
+            <tr><td>Rei Yokoyama</td><td class="mono">poster</td><td>Minimally Destructive Fast Imaging of Single Atoms in an Optical Tweezer Array with Coherent Excitation</td></tr>
+            <tr><td>Reiji Asano</td><td class="mono">poster</td><td>High-Fidelity &sup3;P&#8320; Excitation of Ytterbium-171 Atoms for High-Fidelity Two-Qubit Gates</td></tr>
+            <tr><td>Yuki Kawamura</td><td class="mono">poster</td><td>Construction of an experimental setup for quantum computing with ultracold Yb atoms</td></tr>
+            <tr><td>Shogo Moda</td><td class="mono">poster</td><td>Coherent Rydberg Excitation of Ytterbium-171 Atoms for High-Fidelity Two-Qubit Gates</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:0.6rem;">From <span class="mono">registration sheet_ALL 1.xlsx</span>. Tomita, Christian Sommer, Sylvain de L&eacute;s&eacute;leuc, Makoto Abe, Takashi Imaizumi, Koki Imanishi, Yuhi Tamagawa and Takeshi Fukuhara are registered with no talk or poster; Shinnosuke Miki's contribution type is unclear in the sheet. Robin Kocik isn't in the registration sheet at all &mdash; he doesn't attend the symposium itself.</p>
+    </div>
+  </section>
+
+  <p class="note">All 44 people from the ASPIRE registration sheet are included above, plus Robin Kocik (who isn't registered for the symposium). Most of them are only confirmed for the symposium leg itself (27 Sep&ndash;2 Oct) &mdash; only the smaller group named throughout this page also does the Paris pre-trip, MPQ/LMU, Planqc, and/or Bordeaux legs.</p>
+
+  <div class="checklist">
+    <div class="checklist-head">
+      <h2>Before You Go &mdash; Open Items</h2>
+      <p>Pulled from the planning page's checkboxes. Confirm these before treating dates/venues above as final.</p>
+    </div>
+    <div class="checklist-cols">
+      <div class="checklist-col open">
+        <h3>Still open</h3>
+        <ul>
+          <li><span class="box"></span>Book 23 Sep evening flight to Paris</li>
+          <li><span class="box"></span>Omar to book Palaiseau hotel, 5 nights (23&ndash;27 Sep) near Massy&ndash;Palaiseau (target 6 Aug 2026) &mdash; covers the whole pre-ASPIRE stretch, no separate Paris hotel needed</li>
+          <li><span class="box"></span>Book Palaiseau &rarr; T&uuml;bingen train (27 Sep, self-arranged) &amp; send ticket to Christian Sommer</li>
+          <li><span class="box"></span>Get Pasqal invitation letter (new contact, for insurance)</li>
+          <li><span class="box"></span>Confirm T&uuml;bingen hotel for Fri 2 Oct &mdash; Tomita asking Akane-san</li>
+          <li><span class="box"></span>Cake/Christian to book Munich hotel &mdash; 5 or 6 nights (Tomita/Christian/Matsubara group)</li>
+          <li><span class="box"></span>Book remaining Munich hotel nights for everyone else (from 3 Oct)</li>
+          <li><span class="box"></span>Get Planqc invitation letter &amp; confirm headcount limit</li>
+          <li><span class="box"></span>Confirm Robin Kocik's travel into the MPQ/LMU leg (he skips the symposium itself)</li>
+          <li><span class="box"></span>Confirm how/when Reiji Asano (Takahashi group) joins Bordeaux, and his return date</li>
+        </ul>
+      </div>
+      <div class="checklist-col done">
+        <h3>Done</h3>
+        <ul>
+          <li><span class="box"></span>Invitation letter from Chew &mdash; Antoine lab visit</li>
+          <li><span class="box"></span>Invitation letter from Coll&egrave;ge de France</li>
+          <li><span class="box"></span>Magro asked to organize the Coll&egrave;ge de France lab tour</li>
+          <li><span class="box"></span>MPQ &amp; LMU visit agreed &mdash; visit-day groups (1/2/3) confirmed</li>
+          <li><span class="box"></span>Planqc visit agreed (academic affiliation)</li>
+          <li><span class="box"></span>T&uuml;bingen symposium hotel booked &amp; prepaid via corporate card</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Compiled from the ASPIRE symposium travel-planning page (Notion), the <span class="mono">registration sheet_ALL 1.xlsx</span>, and the <span class="mono">ASPIRE retreat_ver5.xlsx</span> planning sheet, on 30 Jul 2026. Details are still changing, and the sources don't fully agree (see the flagged conflict on 2 Oct) &mdash; confirm before booking.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var LEG_NAMES = {
+    L1: "Pre-ASPIRE Lab Visits (23–27 Sep)",
+    L2: "ASPIRE Symposium (27 Sep–2 Oct)",
+    L3: "Transit to Munich (3–4 Oct)",
+    L4: "MPQ & LMU Visit (5–6 Oct)",
+    L5a: "Planqc Visit (7 Oct)",
+    L5b: "Early Return (7 Oct)",
+    L5c: "Flight Back (8 Oct)",
+    L6: "Move to Bordeaux (7 Oct)",
+    L6v: "Bordeaux Labs & Companies (8–9 Oct)",
+    L6ra: "Fly Back via Paris (8 Oct)",
+    L6rb: "Fly Back via Paris (10 Oct)"
+  };
+
+  var TRAVELERS = {
+    tomita:     { name: "Takafumi Tomita", group: "IMS", legs: ["L1","L2","L3","L4","L5b"], note: "You fly back to Japan on 7 Oct, ahead of the Planqc visit, due to a Yaqumo affiliation conflict." },
+    matsubara:  { name: "Takuya Matsubara", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You give a talk at the Antoine lab visit on 24 Sep, plus a poster at ASPIRE (title TBA). Your Munich hotel may run 6 nights (vs. 5 for Tomita/Christian) since you continue through Planqc." },
+    srakaew:    { name: "Kritsana Srakaew (Cake)", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You give the “QC update” talk at ASPIRE, as “Cake.”" },
+    magro:      { name: "Valentin Magro", group: "IMS", legs: ["L1","L2","L3","L4","L6","L6v","L6ra"], note: "You skip the Pasqal visit on 25 Sep morning. You give the “Spin echo” talk at ASPIRE. You leave the MPQ/LMU leg by 6 Oct and join the Bordeaux leg (led by Sylvain) instead of Planqc, flying back via Paris on 8 Oct." },
+    omar:       { name: "Omar El Farouk Kecir", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You have a poster at ASPIRE (title TBA), plus a talk/seminar at MPQ on 6 Oct, 9:00–10:00 am." },
+    watanabe:   { name: "Genki Watanabe", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You have a poster at ASPIRE (title TBA)." },
+    mauricio:   { name: "Jorge Mauricio", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You have a poster at ASPIRE (title TBA)." },
+    odagawa:    { name: "Harumu Odagawa", group: "IMS", legs: ["L1","L2","L3","L4","L6","L6v","L6ra"], note: "You have a poster at ASPIRE (title TBA). You leave the MPQ/LMU leg by 6 Oct and join the Bordeaux leg (led by Sylvain) instead of Planqc, flying back via Paris on 8 Oct." },
+    shinkawa:   { name: "Seiya Shinkawa", group: "IMS", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You have a poster at ASPIRE (title TBA). You follow the full academic-track itinerary through the Planqc visit, returning 8 Oct." },
+    sommer:     { name: "Christian Sommer", group: "IMS", legs: ["L1","L2","L3","L4","L5b"], note: "You fly back to Japan on 7 Oct, ahead of the Planqc visit, due to a Yaqumo affiliation conflict." },
+    robin:      { name: "Robin Kocik", group: "IMS", legs: ["L4","L6","L6v","L6ra"], note: "You don't attend the ASPIRE symposium itself — you're not in the registration sheet's 44 attendees. You join only for the MPQ/LMU visit (Group 3) and the Bordeaux leg, flying back via Paris on 8 Oct with Odagawa and Magro." },
+    ohmori:     { name: "Kenji Ohmori", group: "IMS", legs: ["L2"], note: "You have a talk at ASPIRE (title TBA). You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan — you appear to travel to Tübingen independently." },
+    makino:     { name: "Akane Makino", group: "RIKEN", legs: ["L2"], note: "You have a poster at ASPIRE, “The Japanese neutral-atom QC community.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan — likely the “Akane-san” Tomita asks about the Tübingen Friday-night hotel." },
+    sylvain:    { name: "Sylvain de Léséleuc", group: "RIKEN", legs: ["L2","L3","L4","L6","L6v","L6rb"], note: "You join the group at the ASPIRE symposium, not the pre-ASPIRE lab visits. You leave the MPQ/LMU leg by 6 Oct and lead the Bordeaux leg, flying back via Paris on 10 Oct — later than the others." },
+    lucas:      { name: "Lucas Ruffloch", group: "RIKEN", legs: ["L1","L2","L3","L4","L5a","L5c"], note: "You skip the Pasqal visit on 25 Sep morning. You have a poster at ASPIRE, “Metasurface for tweezers.” You continue through to the Planqc visit and fly back on 8 Oct." },
+    valentinam: { name: "Valentin Anthoine-Milhomme (Shogun)", group: "RIKEN", legs: ["L1","L2","L3","L4","L6","L6v","L6rb"], note: "You give the “Electronics for cold-atom lab” student talk at ASPIRE, as “Shogun.” You leave the MPQ/LMU leg by 6 Oct and join Bordeaux; your return date isn't confirmed, shown here as 10 Oct alongside Sylvain." },
+    danshita:   { name: "Ippei Danshita", group: "Kindai Danshita", legs: ["L1","L2"], note: "You give a talk at the Antoine lab visit on 24 Sep, plus a talk at ASPIRE, “Theoretical studies on quantum simulation of quantum spin models.” You attend the Pasqal visit specifically for a theory discussion. No legs beyond the ASPIRE symposium are listed for you in the source; return travel isn't specified." },
+    furuchi:    { name: "Rito Furuchi", group: "Kindai Danshita", legs: ["L2"], note: "You have a poster at ASPIRE, “Theoretical analysis on spin-domain formation in the mixed-field Ising model on a square lattice.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    yabuuchi:   { name: "Yoshihiro Yabuuchi", group: "Kindai Danshita", legs: ["L2"], note: "You have a talk at ASPIRE, “Stability of a vortex-antivortex pair state in the hard-core Bose-Hubbard model with long-range hopping.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    kawasaki:   { name: "Daiki Kawasaki", group: "Kindai Danshita", legs: ["L1","L2"], note: "You have a poster at ASPIRE, “Higgs mode in a Rydberg-atom array described by a dipolar XY model with a staggered field.” You attend the Pasqal visit specifically for a theory discussion. No legs beyond the ASPIRE symposium are listed for you in the source; return travel isn't specified." },
+    fukuhara:   { name: "Takeshi Fukuhara", group: "Fukuhara", legs: ["L2"], note: "PI of the Fukuhara group — registered for the symposium with no talk or poster. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    keegan:     { name: "Keegan McGehee", group: "Fukuhara", legs: ["L1","L2"], note: "You have a talk at ASPIRE (tentative), “Toward Measurement-Based Feedback Control of One-Dimensional Quantum Walks.” You skip the Pasqal visit on 25 Sep morning. Your registration comment notes ERATO budget and asks about joining MPQ/LMU — but you're not on Notion's MPQ People list, so treat that as an open question rather than confirmed. No legs beyond the symposium are listed for you in the source; return travel isn't specified." },
+    hatano:     { name: "Jumpei Hatano", group: "Fukuhara", legs: ["L2"], note: "You have a poster at ASPIRE (title TBD). You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan — you plan to visit Heidelberg University separately." },
+    miki:       { name: "Shinnosuke Miki", group: "Fukuhara", legs: ["L2"], note: "Your contribution type is unclear in the registration sheet. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan — you plan to visit Gerhard Birkl's lab separately." },
+    kodai:      { name: "Kodai Morita", group: "Fukuhara", legs: ["L1","L2"], note: "You have a poster at ASPIRE (title TBD). You join the Pasqal visit. Your registration comment says you separately plan to visit Artur Widera's lab after the symposium — not part of the organized legs above. No further legs are listed for you in the source; return travel isn't specified." },
+    abe:        { name: "Makoto Abe", group: "Fukuhara", legs: ["L1","L2","L3","L4"], note: "You skip the Pasqal visit on 25 Sep morning. You join MPQ/LMU but not the Planqc visit; return travel isn't specified in the source." },
+    imaizumi:   { name: "Takashi Imaizumi", group: "Fukuhara", legs: ["L1","L2","L3","L4"], note: "You skip the Pasqal visit on 25 Sep morning. You join MPQ/LMU but not the Planqc visit; return travel isn't specified in the source." },
+    imanishi:   { name: "Koki Imanishi", group: "Fukuhara", legs: ["L2","L3","L4"], note: "You're registered for the ASPIRE symposium (no talk/poster), and separately listed for the MPQ/LMU leg — but not for the pre-ASPIRE Paris trip. Your registration comment says you separately plan to visit Christof Weitenberg's and Michael Köhl's labs — not part of the organized legs above. Travel before/after these legs isn't specified for you." },
+    tamagawa:   { name: "Yuhi Tamagawa", group: "Fukuhara", legs: ["L1","L2","L3","L4"], note: "You skip the Pasqal visit on 25 Sep morning. You join MPQ/LMU but not the Planqc visit; return travel isn't specified in the source." },
+    kunimi:     { name: "Masaya Kunimi", group: "Tokyo Univ. of Science", legs: ["L1","L2"], note: "You have a talk at ASPIRE, “Magnetic-field control of interactions in alkaline-earth Rydberg atoms and applications to XXZ models.” Your registration comment says you'd like to join the Pasqal lab tour “if the schedule allows.” No legs beyond the symposium are listed for you in the source; return travel isn't specified." },
+    kuji:       { name: "Hiroki Kuji", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a talk at ASPIRE, “STAR architecture with erasure conversion.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    yoshida:    { name: "Takaharu Yoshida", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a talk at ASPIRE (title TBA). You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    asari:      { name: "Yuki Asari", group: "Tokyo Univ. of Science", legs: ["L1","L2"], note: "You have a poster at ASPIRE, “Unified Preparation of Exact and Asymptotic Quantum Many-Body Scars from Dicke States.” You're sharing a twin room with Daiki Hashimoto, and your registration comment says you'd like to join the Pasqal lab tour too. No legs beyond the symposium are listed for you in the source; return travel isn't specified." },
+    kuriki:     { name: "Hikaru Kuriki", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE, “Microscopic analysis of Higgs bound states induced by a potential barrier in superfluid Fermi gases.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    hashimoto:  { name: "Daiki Hashimoto", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE, “Asymptotic quantum many-body scar states and gapless excitations…” You're sharing a twin room with Yuki Asari. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    oki:        { name: "Takato Oki", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE (title TBA). You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    kodama:     { name: "Ryusuke Kodama", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE, “Analysis of Krylov Complexity in Asymptotic Quantum Many-Body Scar States.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    shimizu:    { name: "Miyu Shimizu", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE, “Magnon band splitting and time evolution of spin correlation functions in altermagnets.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    tanabe:     { name: "Kaima Tanabe", group: "Tokyo Univ. of Science", legs: ["L2"], note: "You have a poster at ASPIRE, “Evaluation of Energy Barriers across the BCS–BEC Crossover in a Ring-Trapped Superfluid Fermi Gas.” You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    kusano:     { name: "Toshi Kusano", group: "Takahashi (Kyoto Univ.)", legs: ["L2"], note: "You have a talk at ASPIRE, “Toward Hardware-Efficient Quantum Error Correction with Ytterbium Tweezer Arrays” — you arrive Monday and asked to give it on Tuesday. You plan to join lab tours on Thursday and Friday. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    kashimoto:  { name: "Takumi Kashimoto", group: "Takahashi (Kyoto Univ.)", legs: ["L1","L2"], note: "You have a talk at ASPIRE, “Magnetic-field stabilization for improving Ramsey coherence in ⁸⁷Rb atoms.” Your registration comment says you plan to join the Thursday-afternoon Tübingen lab tour and the Friday Stuttgart tour, plus Tomita-sensei's Antoine-lab and Pasqal tours (24–25 Sep) — all already reflected above. No legs beyond the symposium are listed for you in the source; return travel isn't specified." },
+    yokoyama:   { name: "Rei Yokoyama", group: "Takahashi (Kyoto Univ.)", legs: ["L1","L2"], note: "You have a poster at ASPIRE, “Minimally Destructive Fast Imaging of Single Atoms in an Optical Tweezer Array with Coherent Excitation.” Your registration comment says you plan to join the Thursday-afternoon Tübingen lab tour and the Friday Stuttgart tour, plus Tomita-sensei's Antoine-lab and Pasqal tours (24–25 Sep) — all already reflected above. No legs beyond the symposium are listed for you in the source; return travel isn't specified." },
+    asano:      { name: "Reiji Asano", group: "Takahashi (Kyoto Univ.)", legs: ["L2","L6","L6v"], note: "You have a poster at ASPIRE, “High-Fidelity 3P₀ Excitation of Ytterbium-171 Atoms for High-Fidelity Two-Qubit Gates.” Your registration comment says you plan to join lab tours of laser labs and companies — consistent with Bordeaux's laser/photonics companies (Aerodiode, Alphanov, Exail). You're newly added to that leg per Notion — the retreat spreadsheet doesn't reflect it yet, so how you join and your return date aren't specified. You're not listed for the pre-ASPIRE Paris trip." },
+    kawamura:   { name: "Yuki Kawamura", group: "Takahashi (Kyoto Univ.)", legs: ["L2"], note: "You have a poster at ASPIRE, “Construction of an experimental setup for quantum computing with ultracold Yb atoms.” You plan to join the Thursday-afternoon Tübingen lab tour and the Friday Stuttgart tour. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." },
+    moda:       { name: "Shogo Moda", group: "Takahashi (Kyoto Univ.)", legs: ["L2"], note: "You have a poster at ASPIRE, “Coherent Rydberg Excitation of Ytterbium-171 Atoms for High-Fidelity Two-Qubit Gates.” You plan to join the Thursday-afternoon Tübingen lab tour and the Friday Stuttgart tour. You're only in the registration sheet, not the Paris/Munich/Bordeaux travel plan." }
+  };
+
+  var select = document.getElementById("traveler-select");
+  var clearBtn = document.getElementById("clear-traveler");
+  var summary = document.getElementById("personal-summary");
+  var psName = document.getElementById("ps-name");
+  var psChips = document.getElementById("ps-chips");
+  var psNote = document.getElementById("ps-note");
+  var dayEls = document.querySelectorAll(".day[data-legs]");
+
+  function apply() {
+    var id = select.value;
+    if (!id) {
+      summary.hidden = true;
+      dayEls.forEach(function (el) { el.classList.remove("dimmed"); });
+      return;
+    }
+    var t = TRAVELERS[id];
+    if (!t) return;
+
+    psName.textContent = "Your itinerary — " + t.name;
+    psChips.innerHTML = "";
+    t.legs.forEach(function (legId) {
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = LEG_NAMES[legId] || legId;
+      psChips.appendChild(chip);
+    });
+    psNote.textContent = t.note || "";
+    psNote.style.display = t.note ? "" : "none";
+    summary.hidden = false;
+
+    dayEls.forEach(function (el) {
+      var legId = el.getAttribute("data-legs");
+      var skipAttr = el.getAttribute("data-skip");
+      var skipped = skipAttr && skipAttr.split(",").indexOf(id) !== -1;
+      if (t.legs.indexOf(legId) === -1 || skipped) {
+        el.classList.add("dimmed");
+      } else {
+        el.classList.remove("dimmed");
+      }
+    });
+
+    matrixBody.querySelectorAll("tr.mx-person").forEach(function (row) {
+      row.classList.toggle("mx-active", row.getAttribute("data-id") === id);
+    });
+  }
+
+  select.addEventListener("change", apply);
+  clearBtn.addEventListener("click", function () {
+    select.value = "";
+    apply();
+  });
+
+  // Attendance matrix — built from TRAVELERS, one row per person with more than just the symposium leg
+  var MATRIX_COLS = [
+    { label: "Pre-ASPIRE", legs: ["L1"] },
+    { label: "Symposium", legs: ["L2"] },
+    { label: "MPQ/LMU", legs: ["L3", "L4"] },
+    { label: "Planqc", legs: ["L5a"] },
+    { label: "Bordeaux", legs: ["L6", "L6v", "L6ra", "L6rb"] }
+  ];
+  var matrixBody = document.getElementById("matrix-body");
+  var matrixIds = Object.keys(TRAVELERS).filter(function (id) {
+    var legs = TRAVELERS[id].legs;
+    return !(legs.length === 1 && legs[0] === "L2");
+  });
+  var lastGroup = null;
+  matrixIds.forEach(function (id) {
+    var t = TRAVELERS[id];
+    if (t.group !== lastGroup) {
+      var groupRow = document.createElement("tr");
+      groupRow.className = "mx-group";
+      var groupCell = document.createElement("td");
+      groupCell.colSpan = MATRIX_COLS.length + 1;
+      groupCell.textContent = t.group;
+      groupRow.appendChild(groupCell);
+      matrixBody.appendChild(groupRow);
+      lastGroup = t.group;
+    }
+    var row = document.createElement("tr");
+    row.className = "mx-person";
+    row.setAttribute("data-id", id);
+    var nameCell = document.createElement("td");
+    nameCell.className = "mx-name";
+    nameCell.textContent = t.name;
+    row.appendChild(nameCell);
+    MATRIX_COLS.forEach(function (col) {
+      var cell = document.createElement("td");
+      cell.className = "mx-dot";
+      var on = t.legs.some(function (l) { return col.legs.indexOf(l) !== -1; });
+      var dot = document.createElement("span");
+      dot.className = "dot " + (on ? "on" : "off");
+      cell.appendChild(dot);
+      row.appendChild(cell);
+    });
+    row.addEventListener("click", function () {
+      select.value = id;
+      apply();
+      select.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    matrixBody.appendChild(row);
+  });
+})();
+</script>
+
+</body>
+</html>
