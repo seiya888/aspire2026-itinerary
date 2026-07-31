@@ -148,6 +148,9 @@
   .picker label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
   select#traveler-select {
     flex: 1 1 220px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
     font-size: 0.95rem;
     padding: 0.55rem 0.6rem;
     border: 1.5px solid var(--muted);
@@ -298,15 +301,51 @@
   .checklist-head p { margin: 0; color: var(--muted); font-size: 0.85rem; }
   .checklist-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
   @media (max-width: 560px) { .checklist-cols { grid-template-columns: 1fr; } }
+  .matrix-legend .abbr { display: none; }
+  table.matrix .abbr { display: none; }
   @media (max-width: 540px) {
-    .sheet { padding: 1.5rem 1rem 3rem; }
-    .masthead-top { flex-direction: column; gap: 0.7rem; }
+    .sheet { padding: 1.25rem 0.85rem 2.5rem; }
+    .masthead { margin-bottom: 1.4rem; }
+    .masthead-top { flex-direction: column; gap: 0.6rem; }
     .seal { width: 2.6rem; height: 2.6rem; align-self: flex-start; }
     .seal span { font-size: 0.5rem; }
-    h1 { font-size: clamp(1.6rem, 8vw, 2.2rem); }
-    .day { grid-template-columns: 56px 1fr; gap: 0.6rem; }
-    .day-badge .dnum { font-size: 1.1rem; }
-    .route-strip { font-size: 0.9em; gap: 0.3rem; padding: 0.7rem 0.8rem; }
+    h1 { font-size: clamp(1.5rem, 8vw, 2rem); margin-bottom: 0.3rem; }
+    .mission-note { font-size: 0.8rem; margin-bottom: 0.9rem; }
+    .day { grid-template-columns: 48px 1fr; gap: 0.55rem; padding: 0.75rem 0.85rem; }
+    .day-badge .dnum { font-size: 1.05rem; }
+    .day-badge .dow { font-size: 0.6rem; }
+    .day-body h3 { font-size: 0.94rem; }
+    .day-body p { font-size: 0.87rem; }
+    .route-strip { font-size: 0.82em; gap: 0.25rem; padding: 0.65rem 0.75rem; }
+    .leg { margin-top: 1.8rem; }
+
+    /* Picker: stack select above the clear button, full width */
+    .picker { flex-direction: column; align-items: stretch; padding: 0.8rem 0.85rem; }
+    #clear-traveler { align-self: flex-start; }
+
+    /* Attendance matrix: abbreviated headers, fixed compact columns, no horizontal scroll */
+    .matrix-head { padding: 0.8rem 0.85rem 0.6rem; }
+    .matrix-legend .full { display: none; }
+    .matrix-legend .abbr { display: inline; }
+    .matrix-scroll { overflow-x: hidden; }
+    table.matrix { table-layout: fixed; }
+    table.matrix .full { display: none; }
+    table.matrix .abbr { display: inline; }
+    table.matrix th, table.matrix td { padding: 0.4rem 0.2rem; font-size: 0.66rem; white-space: normal; }
+    table.matrix td.mx-name, table.matrix th.mx-name { width: 30%; font-size: 0.72rem; line-height: 1.2; }
+    table.matrix th:not(.mx-name), table.matrix td.mx-dot { width: 14%; text-align: center; }
+    table.matrix tr.mx-group td { font-size: 0.62rem; }
+
+    /* Program tables (speakers, talks & posters): stack into cards instead of a 3-column table */
+    .program-wrap { overflow-x: visible; }
+    table.program, table.program thead, table.program tbody, table.program tr, table.program td { display: block; width: 100%; }
+    table.program thead { display: none; }
+    table.program tr { padding: 0.55rem 0; border-top: 1px solid var(--line); }
+    table.program tr:first-child { border-top: none; }
+    table.program td { border-top: none; padding: 0.08rem 0; white-space: normal; font-size: 0.85rem; }
+    table.program td:first-child { font-weight: 700; font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; font-size: 0.88rem; }
+    table.program td:nth-child(2) { display: inline-block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif; margin: 0.15rem 0; }
+    table.program td:nth-child(3) { color: var(--muted); }
   }
   .checklist-col { padding: 1rem 1.1rem; }
   .checklist-col:first-child { border-right: 1px solid var(--line); }
@@ -440,11 +479,11 @@
         <thead>
           <tr>
             <th class="mx-name">Name</th>
-            <th>Pre-ASPIRE</th>
-            <th>Symposium</th>
-            <th>MPQ/LMU</th>
-            <th>Planqc</th>
-            <th>Bordeaux</th>
+            <th><span class="full">Pre-ASPIRE</span><span class="abbr">Pre</span></th>
+            <th><span class="full">Symposium</span><span class="abbr">Symp</span></th>
+            <th><span class="full">MPQ/LMU</span><span class="abbr">MPQ</span></th>
+            <th><span class="full">Planqc</span><span class="abbr">Plq</span></th>
+            <th><span class="full">Bordeaux</span><span class="abbr">Bdx</span></th>
           </tr>
         </thead>
         <tbody id="matrix-body"></tbody>
