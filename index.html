@@ -190,6 +190,42 @@
   .personal-summary p { margin: 0.3rem 0 0; font-size: 0.88rem; color: var(--ink); }
   .personal-summary p.hint { color: var(--muted); font-size: 0.8rem; }
 
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-top: 1.4rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none;
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tab:focus-visible { outline: 2px solid var(--seal); outline-offset: 1px; }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; animation: tabfade 0.12s ease; }
+  @keyframes tabfade { from { opacity: 0.4; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .tabpanel.active { animation: none; } }
+  .tabpanel > *:first-child { margin-top: 1.2rem; }
+
   /* Attendance matrix */
   .matrix-card {
     margin-top: 1.6rem;
@@ -462,9 +498,20 @@
       <p class="hint">Days greyed out below are not listed for this person in the source planning page.</p>
     </div>
 
-    <p class="note">Built from the ASPIRE symposium group planning page. Many bookings are still open &mdash; see the checklist at the end before relying on this for actual travel.</p>
+    <p class="note">Built from the ASPIRE symposium group planning page. Many bookings are still open &mdash; see the checklist before relying on this for actual travel.</p>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Itinerary sections">
+    <button class="tab active" role="tab" aria-selected="true" data-panel="overview">Overview</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="pre">Pre&#8209;ASPIRE</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="symposium">Symposium</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="munich">Munich</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="planqc">Planqc &amp; Bordeaux</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="people">People</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="checklist">Checklist</button>
+  </nav>
+
+  <div class="tabpanel active" id="panel-overview" role="tabpanel">
   <div class="matrix-card">
     <div class="matrix-head">
       <h2>Who's going where</h2>
@@ -490,7 +537,9 @@
       </table>
     </div>
   </div>
+  </div>
 
+  <div class="tabpanel" id="panel-pre" role="tabpanel">
   <!-- LEG 1 -->
   <section class="leg">
     <div class="board">
@@ -548,7 +597,9 @@
       </div>
     </div>
   </section>
+  </div>
 
+  <div class="tabpanel" id="panel-symposium" role="tabpanel">
   <!-- LEG 2 -->
   <section class="leg">
     <div class="board">
@@ -596,7 +647,9 @@
       <p class="note" style="margin-top:0.6rem;">"Cake" and "Shogun" are nicknames used on the planning page, for Kritsana Srakaew and Valentin Anthoine-Milhomme.</p>
     </div>
   </section>
+  </div>
 
+  <div class="tabpanel" id="panel-munich" role="tabpanel">
   <!-- LEG 3 -->
   <section class="leg">
     <div class="board">
@@ -645,7 +698,9 @@
       </div>
     </div>
   </section>
+  </div>
 
+  <div class="tabpanel" id="panel-planqc" role="tabpanel">
   <!-- LEG 5 -->
   <section class="leg">
     <div class="board">
@@ -714,7 +769,9 @@
       </div>
     </div>
   </section>
+  </div>
 
+  <div class="tabpanel" id="panel-people" role="tabpanel">
   <details class="roster">
     <summary>Full delegation &mdash; 45 named travelers</summary>
     <div class="roster-body">
@@ -825,7 +882,9 @@
   </section>
 
   <p class="note">All 44 people from the ASPIRE registration sheet are included above, plus Robin Kocik (who isn't registered for the symposium). Most of them are only confirmed for the symposium leg itself (27 Sep&ndash;2 Oct) &mdash; only the smaller group named throughout this page also does the Paris pre-trip, MPQ/LMU, Planqc, and/or Bordeaux legs.</p>
+  </div>
 
+  <div class="tabpanel" id="panel-checklist" role="tabpanel">
   <div class="checklist">
     <div class="checklist-head">
       <h2>Before You Go &mdash; Open Items</h2>
@@ -859,6 +918,7 @@
         </ul>
       </div>
     </div>
+  </div>
   </div>
 
   <footer>
@@ -1031,6 +1091,21 @@
       select.scrollIntoView({ behavior: "smooth", block: "center" });
     });
     matrixBody.appendChild(row);
+  });
+})();
+
+(function () {
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".tabpanel");
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      tabs.forEach(function (t) { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); });
+      panels.forEach(function (p) { p.classList.remove("active"); });
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+      document.getElementById("panel-" + tab.getAttribute("data-panel")).classList.add("active");
+      window.scrollTo({ top: document.querySelector(".tabs").offsetTop - 12, behavior: "smooth" });
+    });
   });
 })();
 </script>
