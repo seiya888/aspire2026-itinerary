@@ -294,6 +294,16 @@
   .checklist-head p { margin: 0; color: var(--muted); font-size: 0.85rem; }
   .checklist-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
   @media (max-width: 560px) { .checklist-cols { grid-template-columns: 1fr; } }
+  @media (max-width: 540px) {
+    .sheet { padding: 1.5rem 1rem 3rem; }
+    .masthead-top { flex-direction: column; gap: 0.7rem; }
+    .seal { width: 2.6rem; height: 2.6rem; align-self: flex-start; }
+    .seal span { font-size: 0.5rem; }
+    h1 { font-size: clamp(1.6rem, 8vw, 2.2rem); }
+    .day { grid-template-columns: 56px 1fr; gap: 0.6rem; }
+    .day-badge .dnum { font-size: 1.1rem; }
+    .route-strip { font-size: 0.9em; gap: 0.3rem; padding: 0.7rem 0.8rem; }
+  }
   .checklist-col { padding: 1rem 1.1rem; }
   .checklist-col:first-child { border-right: 1px solid var(--line); }
   @media (max-width: 560px) { .checklist-col:first-child { border-right: none; border-bottom: 1px solid var(--line); } }
